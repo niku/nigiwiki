@@ -13,7 +13,7 @@ config :logger, level: :warn
 config :nigiwaiki, Nigiwaiki.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
-  password: "postgres",
+  password: System.get_env("TRAVIS_POSTGRESQL_PASSWORD") || "postgres",
   database: "nigiwaiki_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox

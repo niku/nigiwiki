@@ -1,0 +1,40 @@
+language: elixir
+sudo: false
+otp_release:
+  - 20.1
+elixir:
+  - 1.5.2
+services:
+  - postgresql
+addons:
+  postgresql: "9.6"
+cache:
+  directories:
+    - _build
+    - deps
+before_install:
+  # https://docs.travis-ci.com/user/encrypting-files/
+  # Decrypt the file about configuration(auth and so on) of hex.pm
+  - mkdir -p ~/.hex/
+  # You need execution command `travis encrypt-file ~/.hex/hex.config` in the repository and adding generated line following like:
+  # - openssl aes-256-cbc -K $encrypted_36030c2fae51_key -iv $encrypted_36030c2fae51_iv -in hex.config.enc -out ~/.hex/hex.config -d
+  - openssl aes-256-cbc -K $encrypted_0303a15e1424_key -iv $encrypted_0303a15e1424_iv -in hex.config.enc -out ~/.hex/hex.config -d
+script:
+  - MIX_ENV=test mix test
+  - mix credo --strict
+  # https://github.com/jeremyjh/dialyxir#command-line-options
+  # > exit immediately with same exit status as dialyzer. useful for CI
+  - mix dialyzer --halt-exit-status
+deploy:
+   # https://docs.travis-ci.com/user/deployment/script/
+   # > `script` must be a scalar pointing to an executable file or command.
+   provider: script
+   # http://yaml.org/spec/1.2/spec.html#id2779048
+   # `>-` indicates the line folding.
+   script: >-
+     mix deps.get &&
+     $HEX_PASSPHRASE mix hex.publish --confirm &&
+     mix clean &&
+     mix deps.clean --all
+   on:
+    tags: true
