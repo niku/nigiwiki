@@ -1,5 +1,5 @@
-defmodule NigiwaikiWeb.ErrorView do
-  use NigiwaikiWeb, :view
+defmodule NigiwikiWeb.ErrorView do
+  use NigiwikiWeb, :view
 
   def render("404.html", _assigns) do
     "Page not found"

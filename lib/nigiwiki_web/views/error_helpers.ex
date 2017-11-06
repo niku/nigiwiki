@@ -1,4 +1,4 @@
-defmodule NigiwaikiWeb.ErrorHelpers do
+defmodule NigiwikiWeb.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.
   """
@@ -32,9 +32,9 @@ defmodule NigiwaikiWeb.ErrorHelpers do
     #     dgettext "errors", "is invalid"
     #
     if count = opts[:count] do
-      Gettext.dngettext(NigiwaikiWeb.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(NigiwikiWeb.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(NigiwaikiWeb.Gettext, "errors", msg, opts)
+      Gettext.dgettext(NigiwikiWeb.Gettext, "errors", msg, opts)
     end
   end
 end

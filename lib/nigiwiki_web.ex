@@ -1,12 +1,12 @@
-defmodule NigiwaikiWeb do
+defmodule NigiwikiWeb do
   @moduledoc """
   The entrypoint for defining your web interface, such
   as controllers, views, channels and so on.
 
   This can be used in your application as:
 
-      use NigiwaikiWeb, :controller
-      use NigiwaikiWeb, :view
+      use NigiwikiWeb, :controller
+      use NigiwikiWeb, :view
 
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
@@ -19,17 +19,17 @@ defmodule NigiwaikiWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: NigiwaikiWeb
+      use Phoenix.Controller, namespace: NigiwikiWeb
       import Plug.Conn
-      import NigiwaikiWeb.Router.Helpers
-      import NigiwaikiWeb.Gettext
+      import NigiwikiWeb.Router.Helpers
+      import NigiwikiWeb.Gettext
     end
   end
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/nigiwaiki_web/templates",
-                        namespace: NigiwaikiWeb
+      use Phoenix.View, root: "lib/nigiwiki_web/templates",
+                        namespace: NigiwikiWeb
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
@@ -37,9 +37,9 @@ defmodule NigiwaikiWeb do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      import NigiwaikiWeb.Router.Helpers
-      import NigiwaikiWeb.ErrorHelpers
-      import NigiwaikiWeb.Gettext
+      import NigiwikiWeb.Router.Helpers
+      import NigiwikiWeb.ErrorHelpers
+      import NigiwikiWeb.Gettext
     end
   end
 
@@ -54,7 +54,7 @@ defmodule NigiwaikiWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      import NigiwaikiWeb.Gettext
+      import NigiwikiWeb.Gettext
     end
   end
 

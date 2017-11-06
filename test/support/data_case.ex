@@ -1,4 +1,4 @@
-defmodule Nigiwaiki.DataCase do
+defmodule Nigiwiki.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -16,20 +16,20 @@ defmodule Nigiwaiki.DataCase do
 
   using do
     quote do
-      alias Nigiwaiki.Repo
+      alias Nigiwiki.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import Nigiwaiki.DataCase
+      import Nigiwiki.DataCase
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Nigiwaiki.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Nigiwiki.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Nigiwaiki.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Nigiwiki.Repo, {:shared, self()})
     end
 
     :ok

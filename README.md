@@ -1,4 +1,4 @@
-# Nigiwaiki
+# Nigiwiki
 
 To start your Phoenix server:
 

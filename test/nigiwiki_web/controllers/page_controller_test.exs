@@ -1,5 +1,5 @@
-defmodule NigiwaikiWeb.PageControllerTest do
-  use NigiwaikiWeb.ConnCase
+defmodule NigiwikiWeb.PageControllerTest do
+  use NigiwikiWeb.ConnCase
 
   test "GET /", %{conn: conn} do
     conn = get conn, "/"

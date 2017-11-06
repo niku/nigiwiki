@@ -1,4 +1,4 @@
-defmodule Nigiwaiki.Repo.Migrations.CreateUsers do
+defmodule Nigiwiki.Repo.Migrations.CreateUsers do
   use Ecto.Migration
 
   def change do

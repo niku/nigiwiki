@@ -1,4 +1,4 @@
-defmodule NigiwaikiWeb.ChannelCase do
+defmodule NigiwikiWeb.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -21,15 +21,15 @@ defmodule NigiwaikiWeb.ChannelCase do
       use Phoenix.ChannelTest
 
       # The default endpoint for testing
-      @endpoint NigiwaikiWeb.Endpoint
+      @endpoint NigiwikiWeb.Endpoint
     end
   end
 
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Nigiwaiki.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Nigiwiki.Repo)
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Nigiwaiki.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Nigiwiki.Repo, {:shared, self()})
     end
     :ok
   end

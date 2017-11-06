@@ -6,16 +6,16 @@
 use Mix.Config
 
 # General application configuration
-config :nigiwaiki,
-  ecto_repos: [Nigiwaiki.Repo],
+config :nigiwiki,
+  ecto_repos: [Nigiwiki.Repo],
   generators: [binary_id: true]
 
 # Configures the endpoint
-config :nigiwaiki, NigiwaikiWeb.Endpoint,
+config :nigiwiki, NigiwikiWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "k9KJsSQlIJr/E1trqW6k1VPvSx+5L7/7O7+hXa9ckmCsFnTnvtYbB+HasoXpxMZs",
-  render_errors: [view: NigiwaikiWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Nigiwaiki.PubSub,
+  render_errors: [view: NigiwikiWeb.ErrorView, accepts: ~w(html json)],
+  pubsub: [name: Nigiwiki.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger

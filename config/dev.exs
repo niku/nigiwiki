@@ -6,7 +6,7 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
-config :nigiwaiki, NigiwaikiWeb.Endpoint,
+config :nigiwiki, NigiwikiWeb.Endpoint,
   http: [port: 4000],
   debug_errors: true,
   code_reloader: true,
@@ -31,13 +31,13 @@ config :nigiwaiki, NigiwaikiWeb.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-config :nigiwaiki, NigiwaikiWeb.Endpoint,
+config :nigiwiki, NigiwikiWeb.Endpoint,
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
-      ~r{lib/nigiwaiki_web/views/.*(ex)$},
-      ~r{lib/nigiwaiki_web/templates/.*(eex)$}
+      ~r{lib/nigiwiki_web/views/.*(ex)$},
+      ~r{lib/nigiwiki_web/templates/.*(eex)$}
     ]
   ]
 
@@ -49,10 +49,10 @@ config :logger, :console, format: "[$level] $message\n"
 config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
-config :nigiwaiki, Nigiwaiki.Repo,
+config :nigiwiki, Nigiwiki.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
-  database: "nigiwaiki_dev",
+  database: "nigiwiki_dev",
   hostname: "localhost",
   pool_size: 10
