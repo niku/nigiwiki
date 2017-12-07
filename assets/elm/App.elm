@@ -1,10 +1,11 @@
 module App exposing (..)
 
-import Html exposing (Html, div, button, text, program)
-import Html.Events exposing (onClick)
+import Html exposing (Html, div, button, text, textarea, program)
+import Html.Events exposing (onClick, onInput)
 import Phoenix.Socket
 import Phoenix.Channel
 import Phoenix.Push
+import Json.Encode as JE
 
 
 -- MODEL
@@ -32,6 +33,7 @@ init =
 type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
     | JoinChannel
+    | SendMessage String
 
 
 
@@ -41,7 +43,9 @@ type Msg
 view : Model -> Html Msg
 view model =
     div []
-        [ button [ onClick JoinChannel ] [ text "Join channel" ] ]
+        [ button [ onClick JoinChannel ] [ text "Join channel" ]
+        , textarea [ onInput SendMessage ] []
+        ]
 
 
 
@@ -67,6 +71,22 @@ update msg model =
 
                 ( phxSocket, phxCmd ) =
                     Phoenix.Socket.join channel model.phxSocket
+            in
+                ( { model | phxSocket = phxSocket }
+                , Cmd.map PhoenixMsg phxCmd
+                )
+
+        SendMessage str ->
+            let
+                payload =
+                    (JE.object [ ( "user", JE.string "user" ), ( "body", JE.string str ) ])
+
+                push_ =
+                    Phoenix.Push.init "new:msg" "room:lobby"
+                        |> Phoenix.Push.withPayload payload
+
+                ( phxSocket, phxCmd ) =
+                    Phoenix.Socket.push push_ model.phxSocket
             in
                 ( { model | phxSocket = phxSocket }
                 , Cmd.map PhoenixMsg phxCmd
