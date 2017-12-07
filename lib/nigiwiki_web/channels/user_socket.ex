@@ -2,7 +2,7 @@ defmodule NigiwikiWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", NigiwikiWeb.RoomChannel
+  channel "room:*", NigiwikiWeb.RoomChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
