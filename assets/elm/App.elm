@@ -1,6 +1,7 @@
 module App exposing (..)
 
-import Html exposing (Html, div, text, program)
+import Html exposing (Html, div, button, text, program)
+import Html.Events exposing (onClick)
 import Phoenix.Socket
 import Phoenix.Channel
 import Phoenix.Push
@@ -30,6 +31,7 @@ init =
 
 type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
+    | JoinChannel
 
 
 
@@ -39,7 +41,7 @@ type Msg
 view : Model -> Html Msg
 view model =
     div []
-        [ text "hello" ]
+        [ button [ onClick JoinChannel ] [ text "Join channel" ] ]
 
 
 
@@ -53,6 +55,18 @@ update msg model =
             let
                 ( phxSocket, phxCmd ) =
                     Phoenix.Socket.update msg model.phxSocket
+            in
+                ( { model | phxSocket = phxSocket }
+                , Cmd.map PhoenixMsg phxCmd
+                )
+
+        JoinChannel ->
+            let
+                channel =
+                    Phoenix.Channel.init "room:lobby"
+
+                ( phxSocket, phxCmd ) =
+                    Phoenix.Socket.join channel model.phxSocket
             in
                 ( { model | phxSocket = phxSocket }
                 , Cmd.map PhoenixMsg phxCmd
