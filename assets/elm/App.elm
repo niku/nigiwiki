@@ -1,11 +1,13 @@
 module App exposing (..)
 
 import Html exposing (Html, div, button, text, textarea, program)
+import Html.Attributes exposing (cols, rows, value)
 import Html.Events exposing (onClick, onInput)
 import Phoenix.Socket
 import Phoenix.Channel
 import Phoenix.Push
 import Json.Encode as JE
+import Json.Decode as JD exposing (field)
 
 
 -- MODEL
@@ -13,6 +15,7 @@ import Json.Encode as JE
 
 type alias Model =
     { phxSocket : Phoenix.Socket.Socket Msg
+    , content : String
     }
 
 
@@ -21,6 +24,8 @@ init =
     ( { phxSocket =
             Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
                 |> Phoenix.Socket.withDebug
+                |> Phoenix.Socket.on "new:msg" "room:lobby" ReceiveMessage
+      , content = ""
       }
     , Cmd.none
     )
@@ -34,6 +39,7 @@ type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
     | JoinChannel
     | SendMessage String
+    | ReceiveMessage JE.Value
 
 
 
@@ -44,12 +50,25 @@ view : Model -> Html Msg
 view model =
     div []
         [ button [ onClick JoinChannel ] [ text "Join channel" ]
-        , textarea [ onInput SendMessage ] []
+        , textarea [ value model.content, onInput SendMessage, cols 80, rows 10 ] []
         ]
 
 
 
 -- UPDATE
+
+
+type alias ChatMessage =
+    { user : String
+    , body : String
+    }
+
+
+chatMessageDecoder : JD.Decoder ChatMessage
+chatMessageDecoder =
+    JD.map2 ChatMessage
+        (field "user" JD.string)
+        (field "body" JD.string)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -91,6 +110,18 @@ update msg model =
                 ( { model | phxSocket = phxSocket }
                 , Cmd.map PhoenixMsg phxCmd
                 )
+
+        ReceiveMessage raw ->
+            case JD.decodeValue chatMessageDecoder raw of
+                Ok chatMessage ->
+                    ( { model | content = chatMessage.body }
+                    , Cmd.none
+                    )
+
+                Err error ->
+                    ( model
+                    , Cmd.none
+                    )
 
 
 
