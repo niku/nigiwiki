@@ -15,6 +15,7 @@ defmodule Nigiwiki.Application do
       supervisor(NigiwikiWeb.Endpoint, []),
       # Start your own worker by calling: Nigiwiki.Worker.start_link(arg1, arg2, arg3)
       # worker(Nigiwiki.Worker, [arg1, arg2, arg3]),
+      supervisor(NigiwikiWeb.Presence, []),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
