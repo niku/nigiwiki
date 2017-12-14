@@ -6,7 +6,7 @@ import Html.Events exposing (onClick, onInput)
 import Phoenix.Socket
 import Phoenix.Channel
 import Phoenix.Push
-import Phoenix.Presence exposing (PresenceState, syncState, presenceStateDecoder)
+import Phoenix.Presence exposing (PresenceState, syncState, syncDiff, presenceStateDecoder, presenceDiffDecoder)
 import Json.Encode as JE
 import Json.Decode as JD exposing (field)
 import Dict exposing (Dict)
@@ -57,6 +57,7 @@ type Msg
     | SendMessage String
     | ReceiveMessage JE.Value
     | HandlePresenceState JE.Value
+    | HandlePresenceDiff JE.Value
 
 
 
@@ -138,6 +139,7 @@ update msg model =
                                 |> Phoenix.Socket.withDebug
                                 |> Phoenix.Socket.on "shout" "room:lobby" ReceiveMessage
                                 |> Phoenix.Socket.on "presence_state" "room:lobby" HandlePresenceState
+                                |> Phoenix.Socket.on "presence_diff" "room:lobby" HandlePresenceDiff
 
                         channel =
                             Phoenix.Channel.init "room:lobby"
@@ -203,6 +205,26 @@ update msg model =
 
                         users =
                             Dict.keys presenceState
+                                |> List.map User
+                    in
+                        ( { model | users = users, phxPresences = newPresenceState }
+                        , Cmd.none
+                        )
+
+                Err error ->
+                    ( model
+                    , Cmd.none
+                    )
+
+        HandlePresenceDiff raw ->
+            case JD.decodeValue (presenceDiffDecoder userPresenceDecoder) raw of
+                Ok presenceDiff ->
+                    let
+                        newPresenceState =
+                            model.phxPresences |> syncDiff presenceDiff
+
+                        users =
+                            Dict.keys newPresenceState
                                 |> List.map User
                     in
                         ( { model | users = users, phxPresences = newPresenceState }
