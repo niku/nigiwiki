@@ -1,13 +1,15 @@
 module App exposing (..)
 
-import Html exposing (Html, div, input, button, text, textarea, program)
+import Html exposing (Html, div, ul, li, input, button, text, textarea, program)
 import Html.Attributes exposing (placeholder, cols, rows, value)
 import Html.Events exposing (onClick, onInput)
 import Phoenix.Socket
 import Phoenix.Channel
 import Phoenix.Push
+import Phoenix.Presence exposing (PresenceState, syncState, presenceStateDecoder)
 import Json.Encode as JE
 import Json.Decode as JD exposing (field)
+import Dict exposing (Dict)
 
 
 -- MODEL
@@ -15,6 +17,8 @@ import Json.Decode as JD exposing (field)
 
 type alias Model =
     { phxSocket : Maybe (Phoenix.Socket.Socket Msg)
+    , phxPresences : PresenceState UserPresence
+    , users : List User
     , userId : String
     , content : String
     }
@@ -23,11 +27,23 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( { phxSocket = Nothing
+      , phxPresences = Dict.empty
+      , users = []
       , userId = ""
       , content = ""
       }
     , Cmd.none
     )
+
+
+type alias User =
+    { id : String
+    }
+
+
+type alias UserPresence =
+    { online_at : String
+    }
 
 
 
@@ -40,16 +56,28 @@ type Msg
     | JoinChannel
     | SendMessage String
     | ReceiveMessage JE.Value
+    | HandlePresenceState JE.Value
 
 
 
 -- VIEW
 
 
+userView : User -> Html Msg
+userView user =
+    li []
+        [ text user.id
+        ]
+
+
 view : Model -> Html Msg
 view model =
     div []
-        [ input [ placeholder "Input your user Id", onInput InputUserId ] []
+        [ div []
+            [ text "Logined user Id"
+            , ul [] (List.map userView model.users)
+            ]
+        , input [ placeholder "Input your user Id", onInput InputUserId ] []
         , button [ onClick JoinChannel ] [ text "Join channel" ]
         , textarea [ value model.content, onInput SendMessage, cols 80, rows 10 ] []
         ]
@@ -68,6 +96,12 @@ chatMessageDecoder : JD.Decoder ChatMessage
 chatMessageDecoder =
     JD.map ChatMessage
         (field "body" JD.string)
+
+
+userPresenceDecoder : JD.Decoder UserPresence
+userPresenceDecoder =
+    JD.map UserPresence
+        (JD.field "online_at" JD.string)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -103,6 +137,7 @@ update msg model =
                             Phoenix.Socket.init url
                                 |> Phoenix.Socket.withDebug
                                 |> Phoenix.Socket.on "shout" "room:lobby" ReceiveMessage
+                                |> Phoenix.Socket.on "presence_state" "room:lobby" HandlePresenceState
 
                         channel =
                             Phoenix.Channel.init "room:lobby"
@@ -153,6 +188,26 @@ update msg model =
                     ( { model | content = chatMessage.body }
                     , Cmd.none
                     )
+
+                Err error ->
+                    ( model
+                    , Cmd.none
+                    )
+
+        HandlePresenceState raw ->
+            case JD.decodeValue (presenceStateDecoder userPresenceDecoder) raw of
+                Ok presenceState ->
+                    let
+                        newPresenceState =
+                            model.phxPresences |> syncState presenceState
+
+                        users =
+                            Dict.keys presenceState
+                                |> List.map User
+                    in
+                        ( { model | users = users, phxPresences = newPresenceState }
+                        , Cmd.none
+                        )
 
                 Err error ->
                     ( model
