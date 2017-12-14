@@ -1,7 +1,7 @@
 module App exposing (..)
 
-import Html exposing (Html, div, button, text, textarea, program)
-import Html.Attributes exposing (cols, rows, value)
+import Html exposing (Html, div, input, button, text, textarea, program)
+import Html.Attributes exposing (placeholder, cols, rows, value)
 import Html.Events exposing (onClick, onInput)
 import Phoenix.Socket
 import Phoenix.Channel
@@ -14,17 +14,16 @@ import Json.Decode as JD exposing (field)
 
 
 type alias Model =
-    { phxSocket : Phoenix.Socket.Socket Msg
+    { phxSocket : Maybe (Phoenix.Socket.Socket Msg)
+    , userId : String
     , content : String
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { phxSocket =
-            Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
-                |> Phoenix.Socket.withDebug
-                |> Phoenix.Socket.on "new:msg" "room:lobby" ReceiveMessage
+    ( { phxSocket = Nothing
+      , userId = ""
       , content = ""
       }
     , Cmd.none
@@ -37,6 +36,7 @@ init =
 
 type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
+    | InputUserId String
     | JoinChannel
     | SendMessage String
     | ReceiveMessage JE.Value
@@ -49,7 +49,8 @@ type Msg
 view : Model -> Html Msg
 view model =
     div []
-        [ button [ onClick JoinChannel ] [ text "Join channel" ]
+        [ input [ placeholder "Input your user Id", onInput InputUserId ] []
+        , button [ onClick JoinChannel ] [ text "Join channel" ]
         , textarea [ value model.content, onInput SendMessage, cols 80, rows 10 ] []
         ]
 
@@ -59,15 +60,13 @@ view model =
 
 
 type alias ChatMessage =
-    { user : String
-    , body : String
+    { body : String
     }
 
 
 chatMessageDecoder : JD.Decoder ChatMessage
 chatMessageDecoder =
-    JD.map2 ChatMessage
-        (field "user" JD.string)
+    JD.map ChatMessage
         (field "body" JD.string)
 
 
@@ -75,41 +74,78 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         PhoenixMsg msg ->
-            let
-                ( phxSocket, phxCmd ) =
-                    Phoenix.Socket.update msg model.phxSocket
-            in
-                ( { model | phxSocket = phxSocket }
-                , Cmd.map PhoenixMsg phxCmd
-                )
+            case model.phxSocket of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just modelPhxSocket ->
+                    let
+                        ( phxSocket, phxCmd ) =
+                            Phoenix.Socket.update msg modelPhxSocket
+                    in
+                        ( { model | phxSocket = Just phxSocket }
+                        , Cmd.map PhoenixMsg phxCmd
+                        )
+
+        InputUserId userId ->
+            ( { model | userId = userId }
+            , Cmd.none
+            )
 
         JoinChannel ->
-            let
-                channel =
-                    Phoenix.Channel.init "room:lobby"
+            case model.phxSocket of
+                Nothing ->
+                    let
+                        url =
+                            "ws://localhost:4000/socket/websocket?user_id=" ++ model.userId
 
-                ( phxSocket, phxCmd ) =
-                    Phoenix.Socket.join channel model.phxSocket
-            in
-                ( { model | phxSocket = phxSocket }
-                , Cmd.map PhoenixMsg phxCmd
-                )
+                        phxSocket_ =
+                            Phoenix.Socket.init url
+                                |> Phoenix.Socket.withDebug
+                                |> Phoenix.Socket.on "shout" "room:lobby" ReceiveMessage
+
+                        channel =
+                            Phoenix.Channel.init "room:lobby"
+
+                        ( phxSocket, phxCmd ) =
+                            Phoenix.Socket.join channel phxSocket_
+                    in
+                        ( { model | phxSocket = Just phxSocket }
+                        , Cmd.map PhoenixMsg phxCmd
+                        )
+
+                Just modelPhxSocket ->
+                    let
+                        channel =
+                            Phoenix.Channel.init "room:lobby"
+
+                        ( phxSocket, phxCmd ) =
+                            Phoenix.Socket.join channel modelPhxSocket
+                    in
+                        ( { model | phxSocket = Just phxSocket }
+                        , Cmd.map PhoenixMsg phxCmd
+                        )
 
         SendMessage str ->
-            let
-                payload =
-                    (JE.object [ ( "user", JE.string "user" ), ( "body", JE.string str ) ])
+            case model.phxSocket of
+                Nothing ->
+                    ( model, Cmd.none )
 
-                push_ =
-                    Phoenix.Push.init "new:msg" "room:lobby"
-                        |> Phoenix.Push.withPayload payload
+                Just modelPhxSocket ->
+                    let
+                        payload =
+                            (JE.object [ ( "body", JE.string str ) ])
 
-                ( phxSocket, phxCmd ) =
-                    Phoenix.Socket.push push_ model.phxSocket
-            in
-                ( { model | phxSocket = phxSocket }
-                , Cmd.map PhoenixMsg phxCmd
-                )
+                        push_ =
+                            Phoenix.Push.init "shout" "room:lobby"
+                                |> Phoenix.Push.withPayload payload
+
+                        ( phxSocket, phxCmd ) =
+                            Phoenix.Socket.push push_ modelPhxSocket
+                    in
+                        ( { model | phxSocket = Just phxSocket }
+                        , Cmd.map PhoenixMsg phxCmd
+                        )
 
         ReceiveMessage raw ->
             case JD.decodeValue chatMessageDecoder raw of
@@ -130,7 +166,12 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Phoenix.Socket.listen model.phxSocket PhoenixMsg
+    case model.phxSocket of
+        Nothing ->
+            Sub.none
+
+        Just phxSocket ->
+            Phoenix.Socket.listen phxSocket PhoenixMsg
 
 
 
