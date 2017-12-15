@@ -1,7 +1,7 @@
 module App exposing (..)
 
 import Html exposing (Html, div, ul, li, input, button, text, textarea, program)
-import Html.Attributes exposing (placeholder, cols, rows, value)
+import Html.Attributes exposing (placeholder, cols, rows, value, disabled)
 import Html.Events exposing (onClick, onInput)
 import Phoenix.Socket
 import Phoenix.Channel
@@ -73,15 +73,23 @@ userView user =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ div []
-            [ text "Logined user Id"
-            , ul [] (List.map userView model.users)
-            ]
-        , input [ placeholder "Input your user Id", onInput InputUserId ] []
-        , button [ onClick JoinChannel ] [ text "Join channel" ]
-        , textarea [ value model.content, onInput SendMessage, cols 80, rows 10 ] []
-        ]
+    case model.phxSocket of
+        Nothing ->
+            div []
+                [ input [ placeholder "Input your user Id", onInput InputUserId ] []
+                , button [ onClick JoinChannel ] [ text "Join channel" ]
+                ]
+
+        Just modelPhxSocket ->
+            div []
+                [ input [ disabled True ] [ text model.userId ]
+                , button [ disabled True ] [ text "Join channel" ]
+                , textarea [ value model.content, onInput SendMessage, cols 80, rows 10 ] []
+                , div []
+                    [ text "Logined user Id"
+                    , ul [] (List.map userView model.users)
+                    ]
+                ]
 
 
 
