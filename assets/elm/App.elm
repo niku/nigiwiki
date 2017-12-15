@@ -54,6 +54,7 @@ type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
     | InputUserId String
     | JoinChannel
+    | LeaveChannel
     | SendMessage String
     | ReceiveMessage JE.Value
     | HandlePresenceState JE.Value
@@ -78,12 +79,14 @@ view model =
             div []
                 [ input [ placeholder "Input your user Id", onInput InputUserId ] []
                 , button [ onClick JoinChannel ] [ text "Join channel" ]
+                , button [ disabled True ] [ text "Leave channel" ]
                 ]
 
         Just modelPhxSocket ->
             div []
                 [ input [ disabled True ] [ text model.userId ]
                 , button [ disabled True ] [ text "Join channel" ]
+                , button [ onClick LeaveChannel ] [ text "Leave channel" ]
                 , textarea [ value model.content, onInput SendMessage, cols 80, rows 10 ] []
                 , div []
                     [ text "Logined user Id"
@@ -168,6 +171,22 @@ update msg model =
                             Phoenix.Socket.join channel modelPhxSocket
                     in
                         ( { model | phxSocket = Just phxSocket }
+                        , Cmd.map PhoenixMsg phxCmd
+                        )
+
+        LeaveChannel ->
+            case model.phxSocket of
+                Nothing ->
+                    ( model
+                    , Cmd.none
+                    )
+
+                Just modelPhxSocket ->
+                    let
+                        ( phxSocket, phxCmd ) =
+                            Phoenix.Socket.leave "room:lobby" modelPhxSocket
+                    in
+                        ( { model | phxSocket = Nothing }
                         , Cmd.map PhoenixMsg phxCmd
                         )
 
