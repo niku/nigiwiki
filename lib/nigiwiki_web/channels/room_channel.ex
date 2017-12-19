@@ -3,8 +3,11 @@ defmodule NigiwikiWeb.RoomChannel do
 
   def join("room:lobby", payload, socket) do
     if authorized?(payload) do
+      payload = %{
+        "body" => Nigiwiki.RoomContent.get("room:lobby")
+      }
       send(self(), :after_join)
-      {:ok, socket}
+      {:ok, payload, socket}
     else
       {:error, %{reason: "unauthorized"}}
     end
@@ -27,6 +30,7 @@ defmodule NigiwikiWeb.RoomChannel do
   # It is also common to receive messages from the client and
   # broadcast to everyone in the current topic (room:lobby).
   def handle_in("shout", payload, socket) do
+    Nigiwiki.RoomContent.put("room:lobby", payload["body"])
     broadcast socket, "shout", payload
     {:noreply, socket}
   end

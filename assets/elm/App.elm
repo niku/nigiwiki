@@ -59,6 +59,7 @@ type Msg
     | ReceiveMessage JE.Value
     | HandlePresenceState JE.Value
     | HandlePresenceDiff JE.Value
+    | InitializeContent JE.Value
 
 
 
@@ -154,6 +155,7 @@ update msg model =
 
                         channel =
                             Phoenix.Channel.init "room:lobby"
+                                |> Phoenix.Channel.onJoin InitializeContent
 
                         ( phxSocket, phxCmd ) =
                             Phoenix.Socket.join channel phxSocket_
@@ -257,6 +259,18 @@ update msg model =
                         ( { model | users = users, phxPresences = newPresenceState }
                         , Cmd.none
                         )
+
+                Err error ->
+                    ( model
+                    , Cmd.none
+                    )
+
+        InitializeContent raw ->
+            case JD.decodeValue chatMessageDecoder raw of
+                Ok chatMessage ->
+                    ( { model | content = chatMessage.body }
+                    , Cmd.none
+                    )
 
                 Err error ->
                     ( model
