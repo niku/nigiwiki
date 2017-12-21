@@ -21,4 +21,4 @@ import "phoenix_html"
 // import socket from "./socket"
 
 import Elm from "./elm.js"
-Elm.App.embed(document.getElementById("elm-app"))
+Elm.App.embed(document.getElementById("elm-app"), {userToken: window.userToken})

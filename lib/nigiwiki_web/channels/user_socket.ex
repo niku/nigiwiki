@@ -20,7 +20,8 @@ defmodule NigiwikiWeb.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   def connect(params, socket) do
-    {:ok, assign(socket, :user_id, params["user_id"])}
+    {:ok, user_id} = Phoenix.Token.verify(NigiwikiWeb.Endpoint, "__salt__", params["user_token"], max_age: 86400)
+    {:ok, assign(socket, :user_id, user_id)}
   end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:

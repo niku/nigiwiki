@@ -15,22 +15,29 @@ import Dict exposing (Dict)
 -- MODEL
 
 
+type alias Flags =
+    { userToken : String
+    }
+
+
 type alias Model =
     { phxSocket : Maybe (Phoenix.Socket.Socket Msg)
     , phxPresences : PresenceState UserPresence
     , users : List User
     , userId : String
     , content : String
+    , userToken : String
     }
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Flags -> ( Model, Cmd Msg )
+init flags =
     ( { phxSocket = Nothing
       , phxPresences = Dict.empty
       , users = []
       , userId = ""
       , content = ""
+      , userToken = flags.userToken
       }
     , Cmd.none
     )
@@ -144,7 +151,7 @@ update msg model =
                 Nothing ->
                     let
                         url =
-                            "ws://localhost:4000/socket/websocket?user_id=" ++ model.userId
+                            "ws://localhost:4000/socket/websocket?user_token=" ++ model.userToken
 
                         phxSocket_ =
                             Phoenix.Socket.init url
@@ -296,9 +303,9 @@ subscriptions model =
 -- MAIN
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    program
+    Html.programWithFlags
         { init = init
         , view = view
         , update = update
