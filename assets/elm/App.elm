@@ -188,7 +188,7 @@ update msg model =
                         ( phxSocket, phxCmd ) =
                             Phoenix.Socket.leave "room:lobby" modelPhxSocket
                     in
-                        ( { model | phxSocket = Nothing }
+                        ( { model | content = "", phxSocket = Nothing }
                         , Cmd.map PhoenixMsg phxCmd
                         )
 
