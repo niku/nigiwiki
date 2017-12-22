@@ -21,7 +21,7 @@ type alias Flags =
 
 
 type alias Model =
-    { phxSocket : Maybe (Phoenix.Socket.Socket Msg)
+    { phxSocket : Phoenix.Socket.Socket Msg
     , phxPresences : PresenceState UserPresence
     , users : List User
     , userId : String
@@ -32,7 +32,12 @@ type alias Model =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { phxSocket = Nothing
+    ( { phxSocket =
+            Phoenix.Socket.init ("ws://localhost:4000/socket/websocket?user_token=" ++ flags.userToken)
+                |> Phoenix.Socket.withDebug
+                |> Phoenix.Socket.on "shout" "room:lobby" ReceiveMessage
+                |> Phoenix.Socket.on "presence_state" "room:lobby" HandlePresenceState
+                |> Phoenix.Socket.on "presence_diff" "room:lobby" HandlePresenceDiff
       , phxPresences = Dict.empty
       , users = []
       , userId = ""
@@ -59,7 +64,6 @@ type alias UserPresence =
 
 type Msg
     = PhoenixMsg (Phoenix.Socket.Msg Msg)
-    | InputUserId String
     | JoinChannel
     | LeaveChannel
     | SendMessage String
@@ -82,25 +86,15 @@ userView user =
 
 view : Model -> Html Msg
 view model =
-    case model.phxSocket of
-        Nothing ->
-            div []
-                [ input [ placeholder "Input your user Id", onInput InputUserId ] []
-                , button [ onClick JoinChannel ] [ text "Join channel" ]
-                , button [ disabled True ] [ text "Leave channel" ]
-                ]
-
-        Just modelPhxSocket ->
-            div []
-                [ input [ disabled True ] [ text model.userId ]
-                , button [ disabled True ] [ text "Join channel" ]
-                , button [ onClick LeaveChannel ] [ text "Leave channel" ]
-                , textarea [ value model.content, onInput SendMessage, cols 80, rows 10 ] []
-                , div []
-                    [ text "Logined user Id"
-                    , ul [] (List.map userView model.users)
-                    ]
-                ]
+    div []
+        [ button [ onClick JoinChannel ] [ text "Join channel" ]
+        , button [ onClick LeaveChannel ] [ text "Leave channel" ]
+        , textarea [ value model.content, onInput SendMessage, cols 80, rows 10 ] []
+        , div []
+            [ text "Logined user Id"
+            , ul [] (List.map userView model.users)
+            ]
+        ]
 
 
 
@@ -128,97 +122,51 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         PhoenixMsg msg ->
-            case model.phxSocket of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just modelPhxSocket ->
-                    let
-                        ( phxSocket, phxCmd ) =
-                            Phoenix.Socket.update msg modelPhxSocket
-                    in
-                        ( { model | phxSocket = Just phxSocket }
-                        , Cmd.map PhoenixMsg phxCmd
-                        )
-
-        InputUserId userId ->
-            ( { model | userId = userId }
-            , Cmd.none
-            )
+            let
+                ( phxSocket, phxCmd ) =
+                    Phoenix.Socket.update msg model.phxSocket
+            in
+                ( { model | phxSocket = phxSocket }
+                , Cmd.map PhoenixMsg phxCmd
+                )
 
         JoinChannel ->
-            case model.phxSocket of
-                Nothing ->
-                    let
-                        url =
-                            "ws://localhost:4000/socket/websocket?user_token=" ++ model.userToken
+            let
+                channel =
+                    Phoenix.Channel.init "room:lobby"
+                        |> Phoenix.Channel.onJoin InitializeContent
 
-                        phxSocket_ =
-                            Phoenix.Socket.init url
-                                |> Phoenix.Socket.withDebug
-                                |> Phoenix.Socket.on "shout" "room:lobby" ReceiveMessage
-                                |> Phoenix.Socket.on "presence_state" "room:lobby" HandlePresenceState
-                                |> Phoenix.Socket.on "presence_diff" "room:lobby" HandlePresenceDiff
-
-                        channel =
-                            Phoenix.Channel.init "room:lobby"
-                                |> Phoenix.Channel.onJoin InitializeContent
-
-                        ( phxSocket, phxCmd ) =
-                            Phoenix.Socket.join channel phxSocket_
-                    in
-                        ( { model | phxSocket = Just phxSocket }
-                        , Cmd.map PhoenixMsg phxCmd
-                        )
-
-                Just modelPhxSocket ->
-                    let
-                        channel =
-                            Phoenix.Channel.init "room:lobby"
-
-                        ( phxSocket, phxCmd ) =
-                            Phoenix.Socket.join channel modelPhxSocket
-                    in
-                        ( { model | phxSocket = Just phxSocket }
-                        , Cmd.map PhoenixMsg phxCmd
-                        )
+                ( phxSocket, phxCmd ) =
+                    Phoenix.Socket.join channel model.phxSocket
+            in
+                ( { model | phxSocket = phxSocket }
+                , Cmd.map PhoenixMsg phxCmd
+                )
 
         LeaveChannel ->
-            case model.phxSocket of
-                Nothing ->
-                    ( model
-                    , Cmd.none
-                    )
-
-                Just modelPhxSocket ->
-                    let
-                        ( phxSocket, phxCmd ) =
-                            Phoenix.Socket.leave "room:lobby" modelPhxSocket
-                    in
-                        ( { model | content = "", phxSocket = Nothing }
-                        , Cmd.map PhoenixMsg phxCmd
-                        )
+            let
+                ( phxSocket, phxCmd ) =
+                    Phoenix.Socket.leave "room:lobby" model.phxSocket
+            in
+                ( { model | content = "", users = [], phxSocket = phxSocket }
+                , Cmd.map PhoenixMsg phxCmd
+                )
 
         SendMessage str ->
-            case model.phxSocket of
-                Nothing ->
-                    ( model, Cmd.none )
+            let
+                payload =
+                    (JE.object [ ( "body", JE.string str ) ])
 
-                Just modelPhxSocket ->
-                    let
-                        payload =
-                            (JE.object [ ( "body", JE.string str ) ])
+                push_ =
+                    Phoenix.Push.init "shout" "room:lobby"
+                        |> Phoenix.Push.withPayload payload
 
-                        push_ =
-                            Phoenix.Push.init "shout" "room:lobby"
-                                |> Phoenix.Push.withPayload payload
-
-                        ( phxSocket, phxCmd ) =
-                            Phoenix.Socket.push push_ modelPhxSocket
-                    in
-                        ( { model | phxSocket = Just phxSocket }
-                        , Cmd.map PhoenixMsg phxCmd
-                        )
+                ( phxSocket, phxCmd ) =
+                    Phoenix.Socket.push push_ model.phxSocket
+            in
+                ( { model | phxSocket = phxSocket }
+                , Cmd.map PhoenixMsg phxCmd
+                )
 
         ReceiveMessage raw ->
             case JD.decodeValue chatMessageDecoder raw of
@@ -291,12 +239,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.phxSocket of
-        Nothing ->
-            Sub.none
-
-        Just phxSocket ->
-            Phoenix.Socket.listen phxSocket PhoenixMsg
+    Phoenix.Socket.listen model.phxSocket PhoenixMsg
 
 
 
