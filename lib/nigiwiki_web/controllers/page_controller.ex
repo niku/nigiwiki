@@ -15,7 +15,7 @@ defmodule NigiwikiWeb.PageController do
         })
 
       user_token ->
-        {:ok, user_id} =
+        {:ok, _user_id} =
           Phoenix.Token.verify(NigiwikiWeb.Endpoint, "__salt__", user_token, max_age: 86400)
 
         render(conn, "index.html", %{
