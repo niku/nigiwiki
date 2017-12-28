@@ -5,7 +5,7 @@ defmodule NigiwikiWeb.RoomChannelTest do
 
   setup do
     {:ok, _, socket} =
-      socket("user_id", %{some: :assign})
+      socket(nil, %{user_id: UUID.uuid4()})
       |> subscribe_and_join(RoomChannel, "room:lobby")
 
     {:ok, socket: socket}

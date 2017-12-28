@@ -46,7 +46,8 @@ defmodule Nigiwiki.Mixfile do
       {:cowboy, "~> 1.0"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
-      {:dialyxir, ">= 0.0.0", only: :dev, runtime: false}
+      {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
+      {:uuid, "~> 1.0", only: :test}
     ]
   end
 
