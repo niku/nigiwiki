@@ -1,0 +1,4 @@
+lib/agent.ex:4: Function child_spec/1 has no local return
+lib/agent.ex:162: The call 'Elixir.Supervisor':child_spec(_@2::#{'id':='Elixir.Nigiwiki.RoomContent', 'start':={'Elixir.Nigiwiki.RoomContent','start_link',[any(),...]}},[]) breaks the contract (child_spec() | {module(),arg::term()} | module(),elixir:keyword()) -> child_spec()
+lib/nigiwiki_web/channels/presence.ex:71: The inferred return type of init/1 ({'ok',#{'node_name':=binary(), 'pubsub_server':=atom(), 'task_sup':='Elixir.NigiwikiWeb.Presence.TaskSupervisor'}}) has nothing in common with {'error',_} | {'ok',pid()}, which is the expected return type for the callback of the 'Elixir.Phoenix.Presence' behaviour
+lib/nigiwiki_web/channels/room_channel.ex:9: Guard test _@1::'true' =:= 'false' can never succeed

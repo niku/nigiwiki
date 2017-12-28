@@ -67,7 +67,8 @@ defmodule Nigiwiki.Mixfile do
 
   defp dialyzer do
     [
-      plt_add_deps: :transitive
+      plt_add_deps: :transitive,
+      ignore_warnings: "dialyzer.ignore-warnings"
     ]
   end
 
