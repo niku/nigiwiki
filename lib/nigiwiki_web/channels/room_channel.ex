@@ -1,4 +1,8 @@
 defmodule NigiwikiWeb.RoomChannel do
+  @moduledoc """
+  Defines a Room Channel.
+  """
+
   use NigiwikiWeb, :channel
 
   def join("room:lobby", payload, socket) do

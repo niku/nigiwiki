@@ -1,4 +1,8 @@
 defmodule Nigiwiki.Accounts.User do
+  @moduledoc """
+  Provides a User in the Account context.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
   alias Nigiwiki.Accounts.User
