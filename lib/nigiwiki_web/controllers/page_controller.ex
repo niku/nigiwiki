@@ -9,14 +9,18 @@ defmodule NigiwikiWeb.PageController do
         {:ok, user} = Accounts.create_user(%{})
         user_token = Phoenix.Token.sign(NigiwikiWeb.Endpoint, "__salt__", user.id)
         conn = put_session(conn, :user_token, user_token)
-        render conn, "index.html", %{
+
+        render(conn, "index.html", %{
           user_token: user_token
-        }
+        })
+
       user_token ->
-        {:ok, user_id} = Phoenix.Token.verify(NigiwikiWeb.Endpoint, "__salt__", user_token, max_age: 86400)
-        render conn, "index.html", %{
+        {:ok, user_id} =
+          Phoenix.Token.verify(NigiwikiWeb.Endpoint, "__salt__", user_token, max_age: 86400)
+
+        render(conn, "index.html", %{
           user_token: user_token
-        }
+        })
     end
   end
 end

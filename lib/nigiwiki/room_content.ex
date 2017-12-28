@@ -4,7 +4,7 @@ defmodule Nigiwiki.RoomContent do
   use Agent
 
   def start_link do
-    Agent.start_link(fn -> Map.new end, name: __MODULE__)
+    Agent.start_link(fn -> Map.new() end, name: __MODULE__)
   end
 
   def get(room) do

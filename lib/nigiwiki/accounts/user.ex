@@ -3,11 +3,9 @@ defmodule Nigiwiki.Accounts.User do
   import Ecto.Changeset
   alias Nigiwiki.Accounts.User
 
-
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "users" do
-
     timestamps()
   end
 

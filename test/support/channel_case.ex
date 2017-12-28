@@ -25,13 +25,13 @@ defmodule NigiwikiWeb.ChannelCase do
     end
   end
 
-
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Nigiwiki.Repo)
+
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Nigiwiki.Repo, {:shared, self()})
     end
+
     :ok
   end
-
 end

@@ -6,6 +6,7 @@ defmodule NigiwikiWeb.RoomChannel do
       payload = %{
         "body" => Nigiwiki.RoomContent.get("room:lobby")
       }
+
       send(self(), :after_join)
       {:ok, payload, socket}
     else
@@ -14,10 +15,13 @@ defmodule NigiwikiWeb.RoomChannel do
   end
 
   def handle_info(:after_join, socket) do
-    push socket, "presence_state", NigiwikiWeb.Presence.list(socket)
-    {:ok, _} = NigiwikiWeb.Presence.track(socket, socket.assigns.user_id, %{
-      online_at: inspect(System.system_time(:seconds))
-    })
+    push(socket, "presence_state", NigiwikiWeb.Presence.list(socket))
+
+    {:ok, _} =
+      NigiwikiWeb.Presence.track(socket, socket.assigns.user_id, %{
+        online_at: inspect(System.system_time(:seconds))
+      })
+
     {:noreply, socket}
   end
 
@@ -31,7 +35,7 @@ defmodule NigiwikiWeb.RoomChannel do
   # broadcast to everyone in the current topic (room:lobby).
   def handle_in("shout", payload, socket) do
     Nigiwiki.RoomContent.put("room:lobby", payload["body"])
-    broadcast socket, "shout", payload
+    broadcast(socket, "shout", payload)
     {:noreply, socket}
   end
 

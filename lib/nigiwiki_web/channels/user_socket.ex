@@ -2,10 +2,10 @@ defmodule NigiwikiWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  channel "room:*", NigiwikiWeb.RoomChannel
+  channel("room:*", NigiwikiWeb.RoomChannel)
 
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket
+  transport(:websocket, Phoenix.Transports.WebSocket)
   # transport :longpoll, Phoenix.Transports.LongPoll
 
   # Socket params are passed from the client and can
@@ -20,7 +20,9 @@ defmodule NigiwikiWeb.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   def connect(params, socket) do
-    {:ok, user_id} = Phoenix.Token.verify(NigiwikiWeb.Endpoint, "__salt__", params["user_token"], max_age: 86400)
+    {:ok, user_id} =
+      Phoenix.Token.verify(NigiwikiWeb.Endpoint, "__salt__", params["user_token"], max_age: 86400)
+
     {:ok, assign(socket, :user_id, user_id)}
   end
 
