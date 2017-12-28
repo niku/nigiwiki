@@ -21,6 +21,7 @@ before_install:
   - openssl aes-256-cbc -K $encrypted_0303a15e1424_key -iv $encrypted_0303a15e1424_iv -in hex.config.enc -out ~/.hex/hex.config -d
 script:
   - MIX_ENV=test mix test
+  - mix format --check-formatted
   - mix credo --strict
   # https://github.com/jeremyjh/dialyxir#command-line-options
   # > exit immediately with same exit status as dialyzer. useful for CI
