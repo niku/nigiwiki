@@ -8,7 +8,6 @@ defmodule Nigiwiki.AccountsTest do
 
     @valid_attrs %{}
     @update_attrs %{}
-    @invalid_attrs %{}
 
     def user_fixture(attrs \\ %{}) do
       {:ok, user} =
@@ -33,20 +32,10 @@ defmodule Nigiwiki.AccountsTest do
       assert {:ok, %User{} = user} = Accounts.create_user(@valid_attrs)
     end
 
-    test "create_user/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Accounts.create_user(@invalid_attrs)
-    end
-
     test "update_user/2 with valid data updates the user" do
       user = user_fixture()
       assert {:ok, user} = Accounts.update_user(user, @update_attrs)
       assert %User{} = user
-    end
-
-    test "update_user/2 with invalid data returns error changeset" do
-      user = user_fixture()
-      assert {:error, %Ecto.Changeset{}} = Accounts.update_user(user, @invalid_attrs)
-      assert user == Accounts.get_user!(user.id)
     end
 
     test "delete_user/1 deletes the user" do
