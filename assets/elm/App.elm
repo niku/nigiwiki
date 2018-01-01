@@ -17,6 +17,7 @@ import Dict exposing (Dict)
 
 type alias Flags =
     { userToken : String
+    , host : String
     }
 
 
@@ -33,7 +34,7 @@ type alias Model =
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     ( { phxSocket =
-            Phoenix.Socket.init ("ws://localhost:4000/socket/websocket?user_token=" ++ flags.userToken)
+            Phoenix.Socket.init ("ws://" ++ flags.host ++ "/socket/websocket?user_token=" ++ flags.userToken)
                 |> Phoenix.Socket.withDebug
                 |> Phoenix.Socket.on "shout" "room:lobby" ReceiveMessage
                 |> Phoenix.Socket.on "presence_state" "room:lobby" HandlePresenceState
